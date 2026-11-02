@@ -1,7 +1,7 @@
 
 name: Signal Followup
 
-"on":
+on:
   schedule:
     - cron: "*/15 * * * *"
   workflow_dispatch:
@@ -9,7 +9,6 @@ name: Signal Followup
 jobs:
   followup:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
