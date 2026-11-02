@@ -56,7 +56,26 @@ function formatSignalMessage(event, pairSignals) {
 async function main() {
   const { from, to } = todayRange();
   const events = await getEconomicCalendar(from, to);
+  console.log("TOTAL EVENTS:", events.length);
 
+console.log(
+  "EVENT SAMPLE:",
+  JSON.stringify(events.slice(0, 5), null, 2)
+);
+
+console.log(
+  "EVENTS WITH ACTUAL:",
+  events.filter(e =>
+    e.actual !== null &&
+    e.actual !== undefined &&
+    e.actual !== ""
+  ).length
+);
+
+console.log(
+  "EVENTS WITH CURRENCY:",
+  events.filter(e => WATCHED_CURRENCIES.has(e.currency)).length
+);
   const releasedRelevant = events.filter(
     (e) =>
       WATCHED_CURRENCIES.has(e.currency) &&
