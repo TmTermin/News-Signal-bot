@@ -56,6 +56,18 @@ function formatSignalMessage(event, pairSignals) {
 async function main() {
   const { from, to } = todayRange();
   const events = await getEconomicCalendar(from, to);
+  // Publish upcoming calendar events to Mini App
+const upcomingEvents = events.filter((e) =>
+  WATCHED_CURRENCIES.has(e.currency) &&
+  e.time &&
+  new Date(e.time).getTime() >= Date.now()
+);
+
+for (const event of upcomingEvents) {
+  await publishNewsItem(event, null);
+}
+
+console.log(`Published ${upcomingEvents.length} upcoming calendar event(s)`);
   console.log("TOTAL EVENTS:", events.length);
 
 console.log(
