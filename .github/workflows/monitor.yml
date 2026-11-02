@@ -26,6 +26,7 @@ jobs:
         run: npm run monitor
         env:
           FINNHUB_API_KEY: ${{ secrets.FINNHUB_API_KEY }}
+          FINANCECALENDAR_API_KEY: ${{ secrets.FINANCECALENDAR_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
