@@ -92,3 +92,23 @@ async function main() {
     // The Mini App's News tab reads this record (via the Vercel API —
     // see lib/appData.js for details)
     const primarySignal = pairSignals.find((s) => s.pair === "XAUUSD") || pairSignals[0];
+    await publishNewsItem(event, primarySignal ? { direction: primarySignal.direction === "bullish" ? "bull" : "bear", confidence: primarySignal.confidence } : null);
+
+    // Save state for the follow-up: used to send a "why did it move
+    // that way" analysis a couple of hours later
+    await setJSON(key, {
+      notified: true,
+      event,
+      pairSignals,
+      notifiedAt: new Date().toISOString(),
+      followupDone: false,
+    });
+
+    console.log(`Signal sent: ${event.event} (${event.currency})`);
+  }
+}
+
+main().catch((err) => {
+  console.error("monitor.js error:", err);
+  process.exit(1);
+});
