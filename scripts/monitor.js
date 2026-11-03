@@ -10,7 +10,7 @@
 //    later.
 
 require("dotenv").config();
-const { getEconomicCalendar } = require("../lib/finnhub");
+const { getEconomicCalendar } = require("../lib/financecalendar");
 const { sendMessage } = require("../lib/telegram");
 const { setJSON, getJSON } = require("../lib/storage");
 const { analyzeEvent, toPairSignals, WATCHED_PAIRS } = require("../lib/analysis");
@@ -41,9 +41,9 @@ function formatSignalMessage(event, pairSignals) {
   const lines = [];
   lines.push(`🔔 <b>New event released</b>`);
   lines.push(`<b>${event.event}</b> (${event.currency})`);
-  lines.push(`Actual: <b>${event.actual}</b> | Forecast: ${event.estimate ?? "—"} | Previous: ${event.prev ?? "—"}`);
+  lines.push(`Actual: <b>${event.actual}</b> | Previous: ${event.prev ?? "—"}`);
   lines.push("");
-  lines.push("📊 <b>Heuristic signal (not a scientific forecast):</b>");
+  lines.push("📊 <b>Heuristic signal, based on actual vs. the previous reading (no forecast is available from this data source):</b>");
   for (const s of pairSignals) {
     const emoji = s.direction === "bullish" ? "🟢 UP" : "🔴 DOWN";
     lines.push(`${s.pair}: ${emoji} — confidence ${s.confidence}/100`);
@@ -56,38 +56,7 @@ function formatSignalMessage(event, pairSignals) {
 async function main() {
   const { from, to } = todayRange();
   const events = await getEconomicCalendar(from, to);
-  // Publish upcoming calendar events to Mini App
-const upcomingEvents = events.filter((e) =>
-  WATCHED_CURRENCIES.has(e.currency) &&
-  e.time &&
-  new Date(e.time).getTime() >= Date.now()
-);
 
-for (const event of upcomingEvents) {
-  await publishNewsItem(event, null);
-}
-
-console.log(`Published ${upcomingEvents.length} upcoming calendar event(s)`);
-  console.log("TOTAL EVENTS:", events.length);
-
-console.log(
-  "EVENT SAMPLE:",
-  JSON.stringify(events.slice(0, 5), null, 2)
-);
-
-console.log(
-  "EVENTS WITH ACTUAL:",
-  events.filter(e =>
-    e.actual !== null &&
-    e.actual !== undefined &&
-    e.actual !== ""
-  ).length
-);
-
-console.log(
-  "EVENTS WITH CURRENCY:",
-  events.filter(e => WATCHED_CURRENCIES.has(e.currency)).length
-);
   const releasedRelevant = events.filter(
     (e) =>
       WATCHED_CURRENCIES.has(e.currency) &&
@@ -123,23 +92,3 @@ console.log(
     // The Mini App's News tab reads this record (via the Vercel API —
     // see lib/appData.js for details)
     const primarySignal = pairSignals.find((s) => s.pair === "XAUUSD") || pairSignals[0];
-    await publishNewsItem(event, primarySignal ? { direction: primarySignal.direction === "bullish" ? "bull" : "bear", confidence: primarySignal.confidence } : null);
-
-    // Save state for the follow-up: used to send a "why did it move
-    // that way" analysis a couple of hours later
-    await setJSON(key, {
-      notified: true,
-      event,
-      pairSignals,
-      notifiedAt: new Date().toISOString(),
-      followupDone: false,
-    });
-
-    console.log(`Signal sent: ${event.event} (${event.currency})`);
-  }
-}
-
-main().catch((err) => {
-  console.error("monitor.js error:", err);
-  process.exit(1);
-});
